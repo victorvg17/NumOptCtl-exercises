@@ -69,10 +69,6 @@ zlabel('z')
 
 %% 1b) implement gradient and hessian
 clc; clear; close all;
-% grad = @(x, y) [2*(x - 1);
-%                 40*(x - 1) + 200*(y - x.^2)];
-% hess = @(x, y) [[2, 40*(1 - 10*x)];
-%                 [0, 200]];
 
 grad = @(x, y) [2*(x-1) - 400*x*y + 400*x.^3;
                 200*(y-x.^2)];
