@@ -50,3 +50,30 @@ f_opt = full(res.f)
 x_opt = full(res.x)          
 lam_x_opt = full(res.lam_x) 
 lam_g_opt = full(res.lam_g)  
+%% 2b)implement and solve optimizatio problem
+clc; clear; close all;
+v_bar = 15;
+% alpha = -1:0.2:1;
+alpha = -0.4;
+v = MX.sym('v', 2, 1);
+p = ballistic_dynamics_RK4(v);
+f = -p(1);
+g = [-p(2);
+    -alpha*(p(1)-10)-p(2);
+    v(1)^2 + v(2)^2];
+
+nlp = struct('x', v, 'f', f', 'g', g);
+solver = nlpsol('solver', 'ipopt', nlp);
+
+% Solve the nlp
+res = solver('x0', [0, 0], ... % solution guess
+             'lbx', -inf,  ... % lower bound on x
+             'ubx', inf,   ... % upper bound on x
+             'lbg', [-inf; -inf; -inf], ... % lower bound on g
+             'ubg', [0; 0; v_bar^2]);
+
+% Print the solution
+f_opt_ball = full(res.f);
+x_opt_ball = full(res.x);
+lam_x_opt_ball = full(res.lam_x);
+lam_g_opt_ball = full(res.lam_g);

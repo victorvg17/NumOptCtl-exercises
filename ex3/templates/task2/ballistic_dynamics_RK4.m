@@ -14,5 +14,5 @@ function [ P_t ] = ballistic_dynamics_RK4( v_start )
     k4 = ode(X0 + DT*k3');
     Xf = X0 + DT/6*(k1' + 2*k2' + 2*k3' + k4');
 
-    P_t = [Xf(3), Xf(4)];
+    P_t = [Xf(1), Xf(2)];
 end
