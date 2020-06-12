@@ -134,7 +134,7 @@ for i = 2:max_it
      
     % YOUR CODE HERE:
     % Compute Newton step
-    z_step = M \ rhs;
+    z_step = - M \ rhs;
     
     % line-search
     max_ls = 100;
