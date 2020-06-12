@@ -1,4 +1,4 @@
-%% Implementation of a Gauss-Neston SQP solver usign CasADi
+%% Implementation of a Gauss-Newton SQP solver usign CasADi
 
 close all
 clear variables
@@ -12,23 +12,28 @@ x = MX.sym('x',nv);
 
 % Define objective function
 % Insert your code here:
-% F = ...;
-% Jf = ...;
-
+f_expr = (x(1)-4)^2 + (x(2)-4)^2;
+F = Function('F', {x}, {f_expr});
+Jf = Function('Jf', {x}, {jacobian(f_expr, x)} );
+Hf = Function('Hf', {x}, {hessian(f_expr, x) });
 % Define residuals (for Gauss-Newton Hessian approximation)
 % Insert your code here:
-% R = ...;
-% Jr = ...;
+R = norm(x - [4; 4])^2;
+Jr = Function('Jr', {x}, {jacobian(R, x) });
 
 % Define equalities 
 % Insert your code here:
-% G = ...;
-% Jg = ...;
+g_expr = sin(x(1)) - x(2)^2;
+G = Function('g', {x}, {g_expr});
+Jg = Function('Jg', {x}, {jacobian(g_expr, x) });
+Hg = Function('Hg', {x}, {hessian(g_expr,x) });
 
 % Define inequalities 
 % Insert your code here:
-% H = ...;
-% Jh = ...;
+h_expr = x(1)^2 + x(2)^2 - 4;
+H = Function('h', {x}, {h_expr});
+Jh = Function('Jh', {x}, {jacobian(h_expr, x) });
+Hh = Function('Hh', {x}, {hessian(h_expr, x) });
 
 % linearization point (parameter)
 xk = MX.sym('xk',nv);
@@ -39,14 +44,15 @@ delta_x = MX.sym('delta_x',nv);
 % Define linearized constraints 
 % Insert your code here:
 % linearized equality constraints
-% g_l = ...;
+g_l = G(xk) + Jg(x)*delta_x;
 % linearized inequality constraints
-% h_l = ...;
+h_l = H(xk) + Jh(x)*delta_x;
 
 % Gauss-Newton Hessian approximation
-% Bk = ...
+Bk = [2 0; 
+      0 2];
 % define the quadratic Gauss-Newton objective function
-% f_gn = ...;
+f_gn = Jf(xk)*delta_x + delta_x'*Bk*delta_x;
 
 % Allocate QP solver
 qp = struct('x',delta_x, 'f',f_gn,'g',[g_l;h_l],'p',xk);
