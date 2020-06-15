@@ -18,8 +18,8 @@ Jf = Function('Jf', {x}, {jacobian(f_expr, x)} );
 Hf = Function('Hf', {x}, {hessian(f_expr, x) });
 % Define residuals (for Gauss-Newton Hessian approximation)
 % Insert your code here:
-R = norm(x - [4; 4])^2;
-Jr = Function('Jr', {x}, {jacobian(R, x) });
+R_expr = x - [4; 4];
+Jr = Function('Jr', {x}, {jacobian(R_expr, x) });
 
 % Define equalities 
 % Insert your code here:
@@ -44,13 +44,12 @@ delta_x = MX.sym('delta_x',nv);
 % Define linearized constraints 
 % Insert your code here:
 % linearized equality constraints
-g_l = G(xk) + Jg(x)*delta_x;
+g_l = G(xk) + Jg(xk)*delta_x;
 % linearized inequality constraints
-h_l = H(xk) + Jh(x)*delta_x;
+h_l = H(xk) + Jh(xk)*delta_x;
 
 % Gauss-Newton Hessian approximation
-Bk = [2 0; 
-      0 2];
+Bk = Jr(xk)'*Jr(xk);
 % define the quadratic Gauss-Newton objective function
 f_gn = Jf(xk)*delta_x + delta_x'*Bk*delta_x;
 
