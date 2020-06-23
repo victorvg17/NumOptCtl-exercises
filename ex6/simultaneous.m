@@ -11,10 +11,10 @@ nx = 2;        % state dimension
 nu = 1;        % control dimension
 h = 0.1;
 import casadi.*
-xk = MX.sym('xk', nx, 1);
-uk = MX.sym('uk', nu, 1);
-dynamics = @ (xk, uk)[xk(2); sin(xk(1) + uk)];  % ode of the systems
-F = @(xk, uk) rk4step(xk, uk, dynamics, h); %integrator from x_k, u_k to x_k+1
+% xk = MX.sym('xk', nx, 1);
+% uk = MX.sym('uk', nu, 1);
+dynamics = @ (x, u)[x(2); sin(x(1) + u)];  % ode of the systems
+F = @(x, u) rk4step(x, u, dynamics, h); %integrator from x_k, u_k to x_k+1
 ...
 
 %% formulate and solve the NLP
@@ -101,7 +101,7 @@ lbg = 0; ubg = 0;
 % similar for w0
 % for complicated initial guess build along side w, otherwise just
 % put it to some value here.
-w0 = [0.1; x0bar];
+w0 = zeros(N*(nu+nx), 1);
 
 % Solve the NLP
 sol = solver('x0', w0, 'lbg', lbg, 'ubg', ubg);
@@ -113,4 +113,15 @@ x1_opt = w_opt(2:nx+nu:end);
 x2_opt = w_opt(3:nx+nu:end);
 
 %%  visualize solution
-...
+t_oc = 0:h:h*(N-1);
+figure(1); clf;
+plot(t_oc, u_opt, '-+', 'DisplayName', 'control trajectory');
+legend('Location', 'east outside');
+xlabel('time t');
+ylabel('control u');
+
+figure(2);
+plot(x1_opt, x2_opt, '-+', 'DisplayName', 'state trajectory');
+legend('Location', 'east outside');
+xlabel('x1');
+ylabel('x2');
