@@ -22,6 +22,8 @@ F = @(x, u) rk4step(x, u, dynamics, h); %integrator from x_k, u_k to x_k+1
 w = {};             % decision variables
 J = 0;              % cost
 g = {};             % constraints
+lbg = [];
+ubg = [];
 
 % elimination of initial state -> x0 is not a decision variable
 x0bar = [pi; 0];
@@ -51,50 +53,17 @@ for k = 0:N-1
     % Add dynamic constraint function,
     % constraining xk to integration result
     g = {g{:},  xk-xnext};
+    lbg = [lbg; [0;0]];
+    ubg = [ubg; [0;0]];
+    
+    g = {g{:},  uk};
+    lbg = [lbg; -1];
+    ubg = [ubg; 1];
 
 end
 
 % contribution of terminal cost
 J = J + 10*(xnext'*xnext);
-
-%% structure of hessian of lagrangian
-% NOT A NECESSARY PART TO BUILD NLP
-% Lagrangian
-L = J;          % start with contribution of objective function
-
-% collect all variables of lagrangian in this (x_k, u_k, lambda_k) in the
-% order defined on the sheet
-z = {};
-u_all = w(1:2:end);
-x_all = w(2:2:end);
-for k = 1:N
-    % New variable for multiplier lambda_k of k-th dynamic constraint
-    lam_k = MX.sym(['lam_', num2str(k)], nx);
-    
-    % contribution of constraint k to lagrangian
-    L = L + lam_k'*g{k};% something something g{k}, lam_k
-        
-    % collect variables in correct order
-    z = {z{:}, w{2*k-1}};   % u_k-1
-    z = {z{:}, lam_k};
-    z = {z{:}, w{2*k}};   % x_k
-end
-z = vertcat(z{:});          % transform to column vector
-
-% Hessian of Lagrangian
-Hess_L = Function('Hess_L', {z}, {hessian(L, z) });
-% evaluate at some value and spy
-z_dims = size(z);
-z_rand = zeros(z_dims(1), 1);
-z_rand(1:5:end) = 0.1; %assign values to uk
-z_rand(2:5:end) = rand(1,1); %assign lambda_k1
-z_rand(3:5:end) = rand(1,1); %assign lambda_k2
-z_rand(4:5:end) = 0.1; %assign xk_1
-z_rand(5:5:end) = 0.1; %assign xk_2
-hess_test = Hess_L(z_rand);
-figure(1); clf;
-spy(hess_test);
-% END NOT NECESSARY PART
 
 %% Newton method solution
 
@@ -110,7 +79,7 @@ solver = nlpsol('solver', 'ipopt', prob);
 % lbg = [lbg; ...];
 % ...
 % or just use g in standard form g(x) = 0 and use
-lbg = 0; ubg = 0;
+% lbg = 0; ubg = 0;
 
 % similar for w0
 % for complicated initial guess build along side w, otherwise just
