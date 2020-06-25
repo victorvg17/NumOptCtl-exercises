@@ -37,7 +37,6 @@ for k = 0:N-1
 
     % Integrate till the end of the current interval
     % something something xk uk
-%     xnext = rk4step(xk, uk, dynamics, h); 
     xnext = F(xk, uk); 
     
     % contribution of stage cost to total cost
@@ -60,32 +59,44 @@ J = J + 10*(xnext'*xnext);
 
 %% structure of hessian of lagrangian
 % NOT A NECESSARY PART TO BUILD NLP
-% % Lagrangian
-% L = J;          % start with contribution of objective function
-% 
-% % collect all variables of lagrangian in this (x_k, u_k, lambda_k) in the
-% % order defined on the sheet
-% z = {};
-% for k = 1:N
-%     % New variable for multiplier lambda_k of k-th dynamic constraint
-%     lam_k = MX.sym(['lam_', num2str(k)], nx);
-%     
-%     % contribution of constraint k to lagrangian
-%     L = L + ...something something g{k}, lam_k
-%         
-%     % collect variables in correct order
-%     z = {z{:}, w{?}};   % u_k-1
-%     z = {z{:}, lam_k};
-%     z = {z{:}, w{?}};   % x_k
-% end
-% z = vertcat(z{:});          % transform to column vector
-% 
-% % Hessian of Lagrangian
-% Hess_L = Function('Hess_L', {z}, ...)
-% ... evaluate at some value and spy
+% Lagrangian
+L = J;          % start with contribution of objective function
+
+% collect all variables of lagrangian in this (x_k, u_k, lambda_k) in the
+% order defined on the sheet
+z = {};
+u_all = w(1:2:end);
+x_all = w(2:2:end);
+for k = 1:N
+    % New variable for multiplier lambda_k of k-th dynamic constraint
+    lam_k = MX.sym(['lam_', num2str(k)], nx);
+    
+    % contribution of constraint k to lagrangian
+    L = L + lam_k'*g{k};% something something g{k}, lam_k
+        
+    % collect variables in correct order
+    z = {z{:}, w{2*k-1}};   % u_k-1
+    z = {z{:}, lam_k};
+    z = {z{:}, w{2*k}};   % x_k
+end
+z = vertcat(z{:});          % transform to column vector
+
+% Hessian of Lagrangian
+Hess_L = Function('Hess_L', {z}, {hessian(L, z) });
+% evaluate at some value and spy
+z_dims = size(z);
+z_rand = zeros(z_dims(1), 1);
+z_rand(1:5:end) = 0.1; %assign values to uk
+z_rand(2:5:end) = rand(1,1); %assign lambda_k1
+z_rand(3:5:end) = rand(1,1); %assign lambda_k2
+z_rand(4:5:end) = 0.1; %assign xk_1
+z_rand(5:5:end) = 0.1; %assign xk_2
+hess_test = Hess_L(z_rand);
+figure(1); clf;
+spy(hess_test);
 % END NOT NECESSARY PART
 
-% Create an NLP solver
+%% Create an NLP solver
 % vertcat({w}) will put all elements of w into a column vector
 prob = struct('f', J, 'x', vertcat(w{:}), 'g', vertcat(g{:}));
 solver = nlpsol('solver', 'ipopt', prob);
@@ -114,13 +125,13 @@ x2_opt = w_opt(3:nx+nu:end);
 
 %%  visualize solution
 t_oc = 0:h:h*(N-1);
-figure(1); clf;
+figure(2);
 plot(t_oc, u_opt, '-+', 'DisplayName', 'control trajectory');
 legend('Location', 'east outside');
 xlabel('time t');
 ylabel('control u');
 
-figure(2);
+figure(3);
 plot(x1_opt, x2_opt, '-+', 'DisplayName', 'state trajectory');
 legend('Location', 'east outside');
 xlabel('x1');
