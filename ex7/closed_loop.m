@@ -30,7 +30,7 @@ while time(end) < Tf
     % optimal feedback law from LQR
     % INSERT YOUR CODE HERE:
     % don't forget to clip to the contraints
-    u_LQR = ...;
+    u_LQR = -clip(-u_max, u_max, K*state_LQR(:,end));
     us_LQR = [us_LQR u_LQR]; % remember control trajectory
     % add incurred cost
     cost_LQR = [cost_LQR cost_LQR(end)+u_LQR.'*R*u_LQR+state_LQR(:,end).'*Q*state_LQR(:,end)];

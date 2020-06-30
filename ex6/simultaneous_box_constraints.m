@@ -35,7 +35,8 @@ for k = 0:N-1
     uk = MX.sym(['u_', num2str(k)], nu);
     
     % collect in w
-    w = {w{:}, uk};            
+    w = {w{:}, uk};
+    % add ubw and lbw 
 
     % Integrate till the end of the current interval
     % something something xk uk
